@@ -35,10 +35,20 @@ app.patch('/items/:id', function(req, res){
     //   item.completed = true
     // }
     item.completed = !item.completed // toggle the items completed status
-    
     item.save(function(err, item){
       if (err) throw err;
       res.json({serverSays: "Request completed", item: item})
+    })
+  })
+})
+
+app.patch('/item-content/:id', function(req, res){
+  Item.findById(req.params.id, function(err, item){
+    if (err) return console.log(err);
+    item.content = req.body.data
+    item.save(function(err, item){
+      if (err) throw err
+      res.json({item: item})
     })
   })
 })
@@ -50,10 +60,11 @@ app.post('/items', function(req, res){
   })
 })
 
-app.delete('/items', function(req, res){
-  Item.remove({}, function(err){
+app.delete('/items/:id', function(req, res){
+  Item.findById(req.params.id, function(err, item){
     if (err) throw err;
-    res.json(res)
+    item.remove();
+    res.json({serverSays: "Successfully removed", item: item})
   })
 })
 

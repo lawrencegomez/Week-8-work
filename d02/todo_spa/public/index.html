@@ -14,6 +14,9 @@
         text-align: center;
         padding: 0;
       }
+      .strike {
+        text-decoration: line-through;
+      }
     </style>
 <div class="container">
 
@@ -37,7 +40,9 @@
     <thead>
         <tr>
             <th>Task</th>
+            <th>Edit</th>
             <th>Completed</th>
+            <th>Delete?</th>
         </tr>
     </thead>
 
@@ -58,25 +63,57 @@
       var eraseAll = $('#remove')
 
       $('body').on('click', '.completed', function(){
-        // console.log($(this).parent().parent().attr('id'));
+        $(this).parent().siblings().first().toggleClass('strike');
         var btn = $(this)
         var itemId = btn.parent().parent().attr('id')
         $.ajax({
           url: '/items/' + itemId,
           method: "PATCH",
+        }).done(function(data){
+          btn.text(data.item.completed)
+          // $(this).parent().siblings().first().toggleClass('strike');
+        })
+      })
+
+      $('body').on('click', '.delete', function(){
+        // console.log($(this).parent().parent().attr('id'));
+        var btn = $(this)
+        var itemId = btn.parent().parent().attr('id')
+        $.ajax({
+          url: '/items/' + itemId,
+          method: "DELETE",
           // contentType: 'application/json',
           // data: JSON.stringify({data: itemId})
         }).done(function(data){
-          btn.text(data.item.completed)
+          btn.parent().parent().slideUp(function(){
+            btn.parent().parent().remove();
+          })
         })
       })
+
+      $('body').on('click', '.edit', function(){
+        var newText = prompt("Enter new text")
+        var btn = $(this)
+        var itemId = btn.parent().parent().attr('id')
+        $.ajax({
+          url: '/item-content/' + itemId,
+          method: "PATCH",
+          contentType: 'application/json',
+          data: JSON.stringify({data: newText})
+        }).done(function(data){
+          btn.parent().siblings().first().html(data.item.content);
+        })
+      })
+
 
         $.ajax({
           url: '/items',
           method: 'GET',
         }).done(function(data){
           for (var i = 0; i < data.length; i ++) {
-            tableBody.append('<tr id="' + data[i]._id + '"><td>' + data[i].content + '</td><td><button class="completed">' + data[i].completed + '</button></td></tr>')
+            tableBody.append('<tr id="' + data[i]._id + '"><td>' + data[i].content +
+            '</td><td><button class="edit">Edit</button></td><td><button class="completed">' + data[i].completed + '</button></td>' +
+            '<td><button class="delete">Delete</button></td></tr>')
           }
         })
 
@@ -127,7 +164,8 @@
             contentType: 'application/json',
             data: JSON.stringify({data: {content: inputContent, completed: false}})
           }).done(function(data){
-            tableBody.append('<tr id="' + data.item._id + '"><td>' + inputContent + '</td><td><button class="completed">' + false + '</button></td></tr>')
+            tableBody.append('<tr id="' + data.item._id + '"><td>' + inputContent +
+            '</td><td><button class="edit">Edit</button></td><td><button class="completed">' + false + '</button></td><td><button class="delete">Delete</button></td></tr>')
             $('#content').val('')
             $('#completed').val('');
           })
