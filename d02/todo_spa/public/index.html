@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>To-Do</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <script src="JS/jquery.js"></script>
+  </head>
+  <body>
+
+    <style media="screen">
+      .container {
+        margin: 0 auto;
+        text-align: center;
+        padding: 0;
+      }
+    </style>
+<div class="container">
+
+    <h1>New To-do:</h1>
+
+  <form class="pure-form" id="new-thing" action="/items" method="post">
+      <input type="text" id="content" name="content" placeholder="Content" required>
+
+      <!-- <input type="text" id="completed" name="completed" placeholder="Completed" required> -->
+
+      <button class='pure-button' type="submit" id="add-task">Submit</button>
+  </form>
+    <br>
+    <br>
+    <br>
+    <br>
+  <button class='pure-button' type="button" id="remove" name="button">Erase All</button> <br><br><br>
+
+
+    <table class="pure-table">
+    <thead>
+        <tr>
+            <th>Task</th>
+            <th>Completed</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    </tbody>
+</table>
+
+</div>
+
+    <script type="text/javascript">
+      var buttonShow = $('#show')
+      var tableBody = $('table tbody')
+      var tr = $('<tr></tr>')
+      var td = $('<td></td>')
+      var submit = $('#add-task')
+      var input = {}
+      var eraseAll = $('#remove')
+
+      $('body').on('click', '.completed', function(){
+        // console.log($(this).parent().parent().attr('id'));
+        var btn = $(this)
+        var itemId = btn.parent().parent().attr('id')
+        $.ajax({
+          url: '/items/' + itemId,
+          method: "PATCH",
+          // contentType: 'application/json',
+          // data: JSON.stringify({data: itemId})
+        }).done(function(data){
+          btn.text(data.item.completed)
+        })
+      })
+
+        $.ajax({
+          url: '/items',
+          method: 'GET',
+        }).done(function(data){
+          for (var i = 0; i < data.length; i ++) {
+            tableBody.append('<tr id="' + data[i]._id + '"><td>' + data[i].content + '</td><td><button class="completed">' + data[i].completed + '</button></td></tr>')
+          }
+        })
+
+
+      submit.on('click', function(evt){
+        evt.preventDefault();
+        console.log(evt);
+      })
+
+
+      eraseAll.on('click', function(){
+        $.ajax({
+          url: '/items',
+          method: 'DELETE',
+          // data: {data: data},
+          contentType: 'application/json',
+          dataType: 'text',
+          success: function(result) {
+            console.log("deleted all items");
+          },
+          error: function(result){
+            console.log("boooooo");
+          }
+        })
+      })
+
+      // buttonShow.on('click', function(){
+      //   $.ajax({
+      //     url: '/items',
+      //     method: 'GET',
+      //   }).done(function(data){
+      //     for (var i = 0; i < data.length; i ++) {
+      //       tableBody.append('<tr><td>' + (i + 1) + '</td><td>' + data[i].content + '</td><td>' + data[i].completed + '</td>')
+      //     }
+      //   })
+      // })
+
+      submit.on('click', function(){
+        var inputContent = $('#content').val();
+        // var inputCompleted = $('#completed').val();
+        input.content = inputContent;
+        // input.completed = inputCompleted;
+        console.log(input);
+        if (inputContent) {
+          $.ajax({
+            url: '/items',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({data: {content: inputContent, completed: false}})
+          }).done(function(data){
+            tableBody.append('<tr id="' + data.item._id + '"><td>' + inputContent + '</td><td><button class="completed">' + false + '</button></td></tr>')
+            $('#content').val('')
+            $('#completed').val('');
+          })
+        }
+        else {
+          alert("Fill in each field dumbo!")
+        }
+      })
+
+    </script>
+  </body>
+</html>
